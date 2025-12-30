@@ -9,6 +9,9 @@ const cartesian = (...a: any[]) => a.reduce((a, b) => a.flatMap((d: any) => b.ma
 export default function AdminProductPage() {
     const [mode, setMode] = useState('manual');
 
+    const [images, setImages] = useState<string[]>([]);
+    const [uploading, setUploading] = useState(false);
+
     // Matrix State
     const [sizes, setSizes] = useState('');
     const [colors, setColors] = useState('');
@@ -34,6 +37,34 @@ export default function AdminProductPage() {
         }));
 
         setGeneratedVariants(variants);
+    };
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await res.json();
+            if (data.secure_url) {
+                setImages([...images, data.secure_url]);
+            }
+        } catch (err) {
+            console.error('Upload failed:', err);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const removeImage = (url: string) => {
+        setImages(images.filter(img => img !== url));
     };
 
     return (
@@ -110,10 +141,22 @@ export default function AdminProductPage() {
                             Product Images
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                            <button className="aspect-square border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center text-gray-400 hover:border-black hover:text-black transition-all bg-white">
+                            {images.map((url, idx) => (
+                                <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border bg-white group">
+                                    <img src={url} alt="Product" className="w-full h-full object-cover" />
+                                    <button
+                                        onClick={() => removeImage(url)}
+                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
+                                </div>
+                            ))}
+                            <label className={`aspect-square border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center text-gray-400 hover:border-black hover:text-black transition-all bg-white cursor-pointer ${uploading ? 'animate-pulse' : ''}`}>
                                 <Plus size={24} />
-                                <span className="text-xs mt-2">Add Image</span>
-                            </button>
+                                <span className="text-xs mt-2">{uploading ? 'Uploading...' : 'Add Image'}</span>
+                                <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={uploading} />
+                            </label>
                         </div>
                     </div>
 
