@@ -6,7 +6,8 @@ export const runtime = 'edge';
 export async function POST(request: Request) {
     try {
         const context = getRequestContext();
-        const db = context?.env?.DB || (process.env as any).DB || (globalThis as any).DB;
+        const env = (context?.env || process.env) as any;
+        const db = env.DB || (globalThis as any).DB;
 
         if (!db) {
             console.error('D1 Database binding (DB) not found. Context env keys:', context ? Object.keys(context.env) : 'no context');
