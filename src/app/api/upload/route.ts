@@ -1,13 +1,6 @@
-import { v2 as cloudinary } from 'cloudinary';
 import { NextResponse } from 'next/server';
 
 export const runtime = 'edge';
-
-cloudinary.config({
-    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 export async function POST(request: Request) {
     try {
@@ -18,21 +11,47 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
         }
 
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
+        const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-        const result = await new Promise((resolve, reject) => {
-            cloudinary.uploader.upload_stream(
-                {
-                    resource_type: 'auto',
-                    folder: 'retail-buddy',
-                },
-                (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result);
-                }
-            ).end(buffer);
-        });
+        if (!cloudName || !apiKey || !apiSecret) {
+            return NextResponse.json({ error: 'Cloudinary credentials missing' }, { status: 500 });
+        }
+
+        const timestamp = Math.round(new Date().getTime() / 1000);
+        const folder = 'retail-buddy';
+
+        // Create signature
+        // Parameters must be in alphabetical order
+        const signatureString = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
+
+        const encoder = new TextEncoder();
+        const data = encoder.encode(signatureString);
+        const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        const cloudinaryFormData = new FormData();
+        cloudinaryFormData.append('file', file);
+        cloudinaryFormData.append('api_key', apiKey);
+        cloudinaryFormData.append('timestamp', timestamp.toString());
+        cloudinaryFormData.append('folder', folder);
+        cloudinaryFormData.append('signature', signature);
+
+        const response = await fetch(
+            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+            {
+                method: 'POST',
+                body: cloudinaryFormData,
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            return NextResponse.json({ error: result.error?.message || 'Upload failed' }, { status: response.status });
+        }
 
         return NextResponse.json(result);
     } catch (error) {
