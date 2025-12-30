@@ -54,8 +54,16 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json(result);
-    } catch (error) {
-        console.error('Upload error:', error);
-        return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    } catch (error: any) {
+        console.error('Upload error details:', {
+            message: error.message,
+            stack: error.stack,
+            env: {
+                hasCloudName: !!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+                hasApiKey: !!process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
+                hasApiSecret: !!process.env.CLOUDINARY_API_SECRET
+            }
+        });
+        return NextResponse.json({ error: 'Upload failed: ' + error.message }, { status: 500 });
     }
 }

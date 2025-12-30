@@ -1,0 +1,60 @@
+import { NextResponse } from 'next/server';
+
+export const runtime = 'edge';
+
+export async function POST(request: Request) {
+    try {
+        const db = (request as any).nextConfig?.env?.DB || (globalThis as any).DB;
+
+        if (!db) {
+            console.error('D1 Database binding (DB) not found');
+            return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+        }
+
+        const body = await request.json();
+        const { id, title, slug, description, category, sub_category, base_price, images, supplier_origin, variants } = body;
+
+        // 1. Insert Product
+        await db.prepare(`
+            INSERT INTO products (id, title, slug, description, category, sub_category, base_price, images, supplier_origin)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+            id,
+            title,
+            slug,
+            description,
+            category,
+            sub_category,
+            base_price,
+            JSON.stringify(images),
+            supplier_origin
+        ).run();
+
+        // 2. Insert Variants
+        if (variants && variants.length > 0) {
+            const variantStmt = db.prepare(`
+                INSERT INTO variants (id, product_id, sku, size, color, stock_quantity, price_override)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `);
+
+            const batch = variants.map((v: any) =>
+                variantStmt.bind(
+                    crypto.randomUUID(),
+                    id,
+                    v.sku || `SKU-${Math.random().toString(36).toUpperCase().substring(2, 10)}`,
+                    v.size || null,
+                    v.color || null,
+                    v.stock || 0,
+                    v.price || null
+                )
+            );
+
+            await db.batch(batch);
+        }
+
+        return NextResponse.json({ success: true, id });
+    } catch (error: any) {
+        console.error('Product save error:', error);
+        return NextResponse.json({ error: error.message || 'Failed to save product' }, { status: 500 });
+    }
+}

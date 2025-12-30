@@ -9,8 +9,15 @@ const cartesian = (...a: any[]) => a.reduce((a, b) => a.flatMap((d: any) => b.ma
 export default function AdminProductPage() {
     const [mode, setMode] = useState('manual');
 
+    // Product State
+    const [title, setTitle] = useState('');
+    const [category, setCategory] = useState('Select Category');
+    const [subCategory, setSubCategory] = useState('');
+    const [basePrice, setBasePrice] = useState('');
+    const [description, setDescription] = useState('');
     const [images, setImages] = useState<string[]>([]);
     const [uploading, setUploading] = useState(false);
+    const [saving, setSaving] = useState(false);
 
     // Matrix State
     const [sizes, setSizes] = useState('');
@@ -67,13 +74,64 @@ export default function AdminProductPage() {
         setImages(images.filter(img => img !== url));
     };
 
+    const handleSave = async () => {
+        if (!title || category === 'Select Category' || !basePrice) {
+            alert('Please fill in required fields (Title, Category, Price)');
+            return;
+        }
+
+        setSaving(true);
+        const productId = crypto.randomUUID();
+        const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Math.random().toString(36).substring(2, 7);
+
+        try {
+            const res = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: productId,
+                    title,
+                    slug,
+                    description,
+                    category,
+                    sub_category: subCategory,
+                    base_price: parseFloat(basePrice),
+                    images,
+                    supplier_origin: mode,
+                    variants: generatedVariants
+                }),
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                alert('Product saved successfully!');
+                // Reset form
+                setTitle('');
+                setBasePrice('');
+                setImages([]);
+                setGeneratedVariants([]);
+            } else {
+                throw new Error(data.error || 'Failed to save');
+            }
+        } catch (err: any) {
+            console.error('Save failed:', err);
+            alert('Error: ' + err.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
         <div className="p-8 max-w-6xl mx-auto">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold tracking-tight">Universal Product Importer</h1>
-                <button className="bg-black text-white px-6 py-2 rounded-full flex items-center gap-2 hover:bg-gray-800 transition-colors">
+                <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-black text-white px-6 py-2 rounded-full flex items-center gap-2 hover:bg-gray-800 transition-colors disabled:bg-gray-400"
+                >
                     <Save size={18} />
-                    Save Product
+                    {saving ? 'Saving...' : 'Save Product'}
                 </button>
             </div>
 
@@ -108,11 +166,20 @@ export default function AdminProductPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700">Product Title</label>
-                                <input placeholder="e.g. Premium Silk Scarf" className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all" />
+                                <input
+                                    value={title}
+                                    onChange={e => setTitle(e.target.value)}
+                                    placeholder="e.g. Premium Silk Scarf"
+                                    className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all"
+                                />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700">Category</label>
-                                <select className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all appearance-none bg-white">
+                                <select
+                                    value={category}
+                                    onChange={e => setCategory(e.target.value)}
+                                    className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all appearance-none bg-white"
+                                >
                                     <option>Select Category</option>
                                     <option>Jewelry</option>
                                     <option>Clothing</option>
@@ -122,16 +189,33 @@ export default function AdminProductPage() {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700">Base Price ($)</label>
-                                <input type="number" placeholder="0.00" className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all" />
+                                <input
+                                    type="number"
+                                    value={basePrice}
+                                    onChange={e => setBasePrice(e.target.value)}
+                                    placeholder="0.00"
+                                    className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all"
+                                />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700">Sub-Category</label>
-                                <input placeholder="e.g. Stitched" className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all" />
+                                <input
+                                    value={subCategory}
+                                    onChange={e => setSubCategory(e.target.value)}
+                                    placeholder="e.g. Stitched"
+                                    className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all"
+                                />
                             </div>
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">Description</label>
-                            <textarea rows={4} placeholder="Describe your product..." className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all" />
+                            <textarea
+                                rows={4}
+                                value={description}
+                                onChange={e => setDescription(e.target.value)}
+                                placeholder="Describe your product..."
+                                className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-black outline-none transition-all"
+                            />
                         </div>
                     </div>
 
