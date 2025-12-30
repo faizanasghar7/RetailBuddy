@@ -4,4 +4,5 @@ pages_build_output_dir = ".next"
 [[d1_databases]]
 binding = "DB"
 database_name = "retail-buddy-db"
-database_id = "YOUR_D1_DATABASE_ID" # User will need to update this
+database_id = "5bd142d8-f18c-4c07-a800-1662ca53c7a9"
+ # User will need to update this
