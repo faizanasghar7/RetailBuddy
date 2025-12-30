@@ -1,0 +1,7 @@
+name = "retail-buddy"
+pages_build_output_dir = ".next"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "retail-buddy-db"
+database_id = "YOUR_D1_DATABASE_ID" # User will need to update this
