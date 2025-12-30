@@ -34,7 +34,16 @@ To connect your live site to the database, you **must** add a D1 binding in the 
 4.  Click **Add binding**.
 5.  **Variable name**: `DB`
 6.  **D1 database**: Select `retailbuddy`.
-7.  **Save** and trigger a new deployment (or redeploy the latest one).
+7.  **Save** and then click **Redeploy** on your latest deployment.
+
+### Node.js Compatibility Flag
+
+If you see a "Node.JS Compatibility Error", you must enable the compatibility flag:
+
+1.  Go to **Settings** > **Functions**.
+2.  Scroll down to **Compatibility Flags**.
+3.  Add `nodejs_compat` to both **Production** and **Preview** environments.
+4.  **Save** and redeploy.
 
 ## Local Development
 
