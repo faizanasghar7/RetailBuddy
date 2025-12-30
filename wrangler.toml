@@ -4,5 +4,5 @@ pages_build_output_dir = ".next"
 [[d1_databases]]
 binding = "DB"
 database_name = "retailbuddy"
-database_id = "648e9e90-5b2f-48e1-a6e9-59b9da996262"
+database_id = "7284c20c-bf21-40ee-9838-cf826a945b57"
  # User will need to update this
