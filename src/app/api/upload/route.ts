@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
+import { getRequestContext } from '@cloudflare/next-on-pages';
 
 export const runtime = 'edge';
 
 export async function POST(request: Request) {
     try {
+        const context = getRequestContext();
+        const env = (context?.env || process.env) as any;
+
         const formData = await request.formData();
         const file = formData.get('file') as File;
 
@@ -11,12 +15,20 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
         }
 
-        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-        const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
-        const apiSecret = process.env.CLOUDINARY_API_SECRET;
+        const cloudName = env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || (env as any).CLOUDINARY_CLOUD_NAME;
+        const apiKey = env.NEXT_PUBLIC_CLOUDINARY_API_KEY || (env as any).CLOUDINARY_API_KEY;
+        const apiSecret = env.CLOUDINARY_API_SECRET || (env as any).CLOUDINARY_API_SECRET;
 
         if (!cloudName || !apiKey || !apiSecret) {
-            return NextResponse.json({ error: 'Cloudinary credentials missing' }, { status: 500 });
+            const missing = [];
+            if (!cloudName) missing.push('CLOUD_NAME');
+            if (!apiKey) missing.push('API_KEY');
+            if (!apiSecret) missing.push('API_SECRET');
+
+            return NextResponse.json({
+                error: 'Cloudinary credentials missing',
+                details: `Missing: ${missing.join(', ')}. Please set them in Cloudflare Pages Dashboard.`
+            }, { status: 500 });
         }
 
         const timestamp = Math.round(new Date().getTime() / 1000);

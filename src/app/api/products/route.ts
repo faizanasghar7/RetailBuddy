@@ -1,14 +1,19 @@
 import { NextResponse } from 'next/server';
+import { getRequestContext } from '@cloudflare/next-on-pages';
 
 export const runtime = 'edge';
 
 export async function POST(request: Request) {
     try {
-        const db = (request as any).nextConfig?.env?.DB || (globalThis as any).DB;
+        const context = getRequestContext();
+        const db = context?.env?.DB || (process.env as any).DB || (globalThis as any).DB;
 
         if (!db) {
-            console.error('D1 Database binding (DB) not found');
-            return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+            console.error('D1 Database binding (DB) not found. Context env keys:', context ? Object.keys(context.env) : 'no context');
+            return NextResponse.json({
+                error: 'Database connection failed',
+                details: 'DB binding not found. Please ensure you have bound your D1 database with the name "DB" in the Cloudflare Pages dashboard.'
+            }, { status: 500 });
         }
 
         const body = await request.json();
