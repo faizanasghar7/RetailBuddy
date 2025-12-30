@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
+
+export const runtime = 'edge';
 import { ShoppingBag, Heart, Share2, ChevronLeft, ChevronRight, Star, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 

@@ -18,10 +18,10 @@ Add these variables in **Settings > Variables and Secrets**:
 
 | Variable Name | Value |
 |---------------|-------|
-| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | `your_cloud_name` |
-| `NEXT_PUBLIC_CLOUDINARY_API_KEY` | `your_api_key` |
-| `CLOUDINARY_API_SECRET` | `your_api_secret` |
-| `CLOUDINARY_URL` | `your_cloudinary_url` |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | `daskfwfho` |
+| `NEXT_PUBLIC_CLOUDINARY_API_KEY` | `421877397396513` |
+| `CLOUDINARY_API_SECRET` | `DwzGYfcFtkJ1b648ocpy6JFxzp0` |
+| `CLOUDINARY_URL` | `cloudinary://421877397396513:DwzGYfcFtkJ1b648ocpy6JFxzp0@daskfwfho` |
 | `ADMIN_PIN` | `admin123` |
 
 ## Local Development
