@@ -3,7 +3,7 @@ pages_build_output_dir = ".vercel/output/static"
 compatibility_date = "2024-11-18"
 compatibility_flags = [ "nodejs_compat" ]
 
-[[d1_databases]]
-binding = "DB"
-database_name = "retailbuddy-v2"
-database_id = "e3f2ce47-84fa-4dcc-8278-71110e9af59b"
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "retailbuddy-v2"
+# database_id = "e3f2ce47-84fa-4dcc-8278-71110e9af59b"
