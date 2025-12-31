@@ -1,12 +1,12 @@
 -- 1. AUTH & ADMIN
-CREATE TABLE admin_users (
+CREATE TABLE IF NOT EXISTS admin_users (
   id INTEGER PRIMARY KEY,
   username TEXT UNIQUE,
   password_hash TEXT NOT NULL -- Store bcrypt hash here
 );
 
 -- 2. PRODUCTS & VARIANTS
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
   id TEXT PRIMARY KEY, -- UUID
   title TEXT NOT NULL,
   slug TEXT UNIQUE,
@@ -19,7 +19,7 @@ CREATE TABLE products (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE variants (
+CREATE TABLE IF NOT EXISTS variants (
   id TEXT PRIMARY KEY,
   product_id TEXT,
   sku TEXT,
@@ -32,7 +32,7 @@ CREATE TABLE variants (
 );
 
 -- 3. ORDERS
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
   id TEXT PRIMARY KEY,
   customer_name TEXT,
   customer_email TEXT,
@@ -44,4 +44,4 @@ CREATE TABLE orders (
 );
 
 -- SEED INITIAL DATA (Example)
-INSERT INTO admin_users (username, password_hash) VALUES ('admin', '1234'); -- Change this later!
+INSERT OR IGNORE INTO admin_users (username, password_hash) VALUES ('admin', '1234'); -- Change this later!
