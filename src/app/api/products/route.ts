@@ -6,6 +6,7 @@ export const runtime = 'edge';
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
         const category = searchParams.get('category');
         const search = searchParams.get('search');
 
@@ -17,6 +18,27 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
         }
 
+        // Handle Single Product Fetch
+        if (id) {
+            const product = await db.prepare('SELECT * FROM products WHERE id = ?').bind(id).first();
+
+            if (!product) {
+                return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+            }
+
+            const { results: variants } = await db.prepare('SELECT * FROM variants WHERE product_id = ?').bind(id).all();
+
+            return NextResponse.json({
+                product: {
+                    ...product,
+                    images: product.images ? JSON.parse(product.images as string) : [],
+                    price: product.base_price,
+                    variants: variants || []
+                }
+            });
+        }
+
+        // Handle List Fetch
         let query = `SELECT * FROM products WHERE 1=1`;
         const params: any[] = [];
 
