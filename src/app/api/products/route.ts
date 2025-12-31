@@ -3,6 +3,51 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 
 export const runtime = 'edge';
 
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const category = searchParams.get('category');
+        const search = searchParams.get('search');
+
+        const context = getRequestContext();
+        const env = (context?.env || process.env) as any;
+        const db = env.DB || (globalThis as any).DB;
+
+        if (!db) {
+            return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+        }
+
+        let query = `SELECT * FROM products WHERE 1=1`;
+        const params: any[] = [];
+
+        if (category && category !== 'All') {
+            query += ` AND category = ?`;
+            params.push(category);
+        }
+
+        if (search) {
+            query += ` AND (title LIKE ? OR description LIKE ?)`;
+            params.push(`%${search}%`, `%${search}%`);
+        }
+
+        query += ` ORDER BY created_at DESC`;
+
+        const { results } = await db.prepare(query).bind(...params).all();
+
+        // Parse images JSON
+        const products = results.map((p: any) => ({
+            ...p,
+            images: p.images ? JSON.parse(p.images) : [],
+            price: p.base_price // Map base_price to price for frontend consistency
+        }));
+
+        return NextResponse.json({ products });
+    } catch (error: any) {
+        console.error('Product fetch error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
 export async function POST(request: Request) {
     try {
         const context = getRequestContext();
