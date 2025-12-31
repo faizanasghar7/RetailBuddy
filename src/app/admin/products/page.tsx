@@ -329,7 +329,85 @@ export default function AdminProductPage() {
                     </p>
                     <label className="bg-black text-white px-8 py-3 rounded-full cursor-pointer hover:bg-gray-800 transition-colors inline-block font-medium">
                         Browse Files
-                        <input type="file" className="hidden" onChange={(e) => console.log('Handle Excel Here')} />
+                        <input
+                            type="file"
+                            className="hidden"
+                            accept=".xlsx, .xls, .csv"
+                            onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+
+                                setUploading(true);
+                                try {
+                                    const buffer = await file.arrayBuffer();
+                                    const wb = XLSX.read(buffer);
+                                    const ws = wb.Sheets[wb.SheetNames[0]];
+                                    const data: any[] = XLSX.utils.sheet_to_json(ws);
+
+                                    let successCount = 0;
+
+                                    for (const row of data) {
+                                        // 1. Map Columns (Flexible matching)
+                                        const title = row['Title'] || row['Product Name'] || row['Name'];
+                                        if (!title) continue;
+
+                                        const price = row['Price'] || row['Base Price'] || row['Cost'] || 0;
+                                        const category = row['Category'] || 'Uncategorized';
+                                        const description = row['Description'] || '';
+                                        const image = row['Image'] || row['Image URL'] || '';
+
+                                        // 2. Handle Variants (Size/Color columns)
+                                        const sizeStr = row['Size'] || row['Sizes'] || '';
+                                        const colorStr = row['Color'] || row['Colors'] || '';
+
+                                        const sizeArr = sizeStr ? sizeStr.toString().split(',').map((s: string) => s.trim()) : [];
+                                        const colorArr = colorStr ? colorStr.toString().split(',').map((c: string) => c.trim()) : [];
+
+                                        let variants: any[] = [];
+                                        if (sizeArr.length || colorArr.length) {
+                                            // Generate combinations
+                                            const combos = (sizeArr.length && colorArr.length)
+                                                ? cartesian(sizeArr, colorArr)
+                                                : (sizeArr.length ? sizeArr : colorArr);
+
+                                            variants = combos.map((c: any) => ({
+                                                name: Array.isArray(c) ? c.join(' / ') : c,
+                                                price: 0, // Default override
+                                                stock: 10,
+                                                sku: ''
+                                            }));
+                                        }
+
+                                        // 3. Create Product
+                                        const productId = crypto.randomUUID();
+                                        const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Math.random().toString(36).substring(2, 7);
+
+                                        await fetch('/api/products', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                id: productId,
+                                                title,
+                                                slug,
+                                                description,
+                                                category,
+                                                base_price: parseFloat(price),
+                                                images: image ? [image] : [],
+                                                variants,
+                                                supplier_origin: 'excel'
+                                            })
+                                        });
+                                        successCount++;
+                                    }
+                                    alert(`Successfully imported ${successCount} products!`);
+                                } catch (err) {
+                                    console.error('Excel import failed:', err);
+                                    alert('Failed to import Excel file.');
+                                } finally {
+                                    setUploading(false);
+                                }
+                            }}
+                        />
                     </label>
                 </div>
             )}
