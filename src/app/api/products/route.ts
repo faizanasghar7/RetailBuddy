@@ -95,12 +95,12 @@ export async function POST(request: Request) {
             id,
             title,
             slug,
-            description,
+            description || null,
             category,
-            sub_category,
+            sub_category || null,
             base_price,
-            JSON.stringify(images),
-            supplier_origin
+            JSON.stringify(images || []),
+            supplier_origin || 'manual'
         ).run();
 
         // 2. Insert Variants

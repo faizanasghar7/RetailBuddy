@@ -406,6 +406,7 @@ export default function AdminProductPage() {
                                                 slug,
                                                 description,
                                                 category,
+                                                sub_category: '',
                                                 base_price: parseFloat(price),
                                                 images: image ? [image] : [],
                                                 variants,
