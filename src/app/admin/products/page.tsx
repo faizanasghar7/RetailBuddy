@@ -370,12 +370,27 @@ export default function AdminProductPage() {
                                                 ? cartesian(sizeArr, colorArr)
                                                 : (sizeArr.length ? sizeArr : colorArr);
 
-                                            variants = combos.map((c: any) => ({
-                                                name: Array.isArray(c) ? c.join(' / ') : c,
-                                                price: 0, // Default override
-                                                stock: 10,
-                                                sku: ''
-                                            }));
+                                            variants = combos.map((c: any) => {
+                                                let size = null;
+                                                let color = null;
+
+                                                if (Array.isArray(c)) {
+                                                    size = c[0];
+                                                    color = c[1];
+                                                } else {
+                                                    if (sizeArr.length) size = c;
+                                                    else color = c;
+                                                }
+
+                                                return {
+                                                    name: Array.isArray(c) ? c.join(' / ') : c,
+                                                    price: 0,
+                                                    stock: 10,
+                                                    sku: '',
+                                                    size,
+                                                    color
+                                                };
+                                            });
                                         }
 
                                         // 3. Create Product
