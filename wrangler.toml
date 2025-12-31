@@ -5,5 +5,5 @@ compatibility_flags = [ "nodejs_compat" ]
 
 # [[d1_databases]]
 # binding = "DB"
-# database_name = "retailbuddy-v2"
-# database_id = "e3f2ce47-84fa-4dcc-8278-71110e9af59b"
+# database_name = "retailbuddy-web"
+# database_id = "2dc3b208-5fb4-4752-aea5-f3610d600e28"
