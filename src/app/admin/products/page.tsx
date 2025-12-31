@@ -354,7 +354,24 @@ export default function AdminProductPage() {
                                         const price = row['Price'] || row['Base Price'] || row['Cost'] || 0;
                                         const category = row['Category'] || 'Uncategorized';
                                         const description = row['Description'] || '';
-                                        const image = row['Image'] || row['Image URL'] || '';
+                                        let image = row['Image'] || row['Image URL'] || '';
+
+                                        // Upload to Cloudinary if it's a URL
+                                        if (image && image.toString().startsWith('http')) {
+                                            try {
+                                                const uploadRes = await fetch('/api/upload', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ url: image })
+                                                });
+                                                const uploadData = await uploadRes.json();
+                                                if (uploadData.secure_url) {
+                                                    image = uploadData.secure_url;
+                                                }
+                                            } catch (e) {
+                                                console.error('Failed to upload image from URL:', image, e);
+                                            }
+                                        }
 
                                         // 2. Handle Variants (Size/Color columns)
                                         const sizeStr = row['Size'] || row['Sizes'] || '';

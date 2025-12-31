@@ -8,11 +8,19 @@ export async function POST(request: Request) {
         const context = getRequestContext();
         const env = (context?.env || process.env) as any;
 
-        const formData = await request.formData();
-        const file = formData.get('file') as File;
+        const contentType = request.headers.get('content-type') || '';
+        let fileToUpload: File | string | null = null;
 
-        if (!file) {
-            return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+        if (contentType.includes('application/json')) {
+            const body = await request.json();
+            fileToUpload = body.url;
+        } else {
+            const formData = await request.formData();
+            fileToUpload = formData.get('file') as File;
+        }
+
+        if (!fileToUpload) {
+            return NextResponse.json({ error: 'No file or URL provided' }, { status: 400 });
         }
 
         const cloudName = env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || (env as any).CLOUDINARY_CLOUD_NAME;
@@ -45,7 +53,7 @@ export async function POST(request: Request) {
         const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
         const cloudinaryFormData = new FormData();
-        cloudinaryFormData.append('file', file);
+        cloudinaryFormData.append('file', fileToUpload);
         cloudinaryFormData.append('api_key', apiKey);
         cloudinaryFormData.append('timestamp', timestamp.toString());
         cloudinaryFormData.append('folder', folder);
